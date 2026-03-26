@@ -31,5 +31,15 @@ export function getOpenAiModel() {
 }
 
 export function getPdfParserUrl() {
-  return process.env.PDF_PARSER_URL?.replace(/\/$/, "") ?? null;
+  if (process.env.PDF_PARSER_URL) {
+    return process.env.PDF_PARSER_URL.replace(/\/$/, "");
+  }
+
+  if (process.env.ENABLE_BUNDLED_DOCLING === "1") {
+    const host = process.env.DOCLING_HOST ?? "127.0.0.1";
+    const port = process.env.DOCLING_PORT ?? "8000";
+    return `http://${host}:${port}`;
+  }
+
+  return null;
 }

@@ -62,12 +62,6 @@ OPENAI_API_KEY=your-openai-api-key
 OPENAI_MODEL=gpt-4.1-mini
 ```
 
-Optional:
-
-```bash
-PDF_PARSER_URL=https://your-docling-service.up.railway.app
-```
-
 ### 3. Configure Google OAuth
 
 In Google Cloud:
@@ -99,8 +93,9 @@ After setting the Railway variables and Google callback:
 
 - `NEXTAUTH_URL` should be the final Railway HTTPS URL, not localhost.
 - The current app keeps results in memory only. A restart or redeploy clears prior scan results.
-- PDF parsing is optional. If you do not deploy the Docling sidecar, HTML/text receipts still work.
-- If you want Docling on Railway too, deploy `python/docling_service` as a separate Railway service and set `PDF_PARSER_URL` to that service URL.
+- The Railway Docker image now starts the Next.js app and the Docling FastAPI parser together in one service.
+- In Railway, you do not need a separate `PDF_PARSER_URL` unless you intentionally want to override the bundled Docling process.
+- PDF parsing is still optional for local development. If `PDF_PARSER_URL` is not set locally, only HTML/text receipts are parsed unless you manually run the bundled sidecar.
 
 ## Commands
 
