@@ -1,4 +1,4 @@
-FROM node:22-alpine AS base
+FROM node:22-bookworm-slim AS base
 WORKDIR /app
 
 FROM base AS deps
@@ -19,12 +19,22 @@ ENV ENABLE_BUNDLED_DOCLING=1
 ENV DOCLING_HOST=127.0.0.1
 ENV DOCLING_PORT=8000
 ENV PDF_PARSER_URL=http://127.0.0.1:8000
+ENV PIP_NO_CACHE_DIR=1
+ENV PIP_PREFER_BINARY=1
 
-RUN apk add --no-cache python3 py3-pip py3-virtualenv
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends \
+    python3 \
+    python3-pip \
+    python3-venv \
+    libglib2.0-0 \
+    libgl1 \
+  && rm -rf /var/lib/apt/lists/*
 
 COPY python/docling_service/requirements.txt ./python/docling_service/requirements.txt
 RUN python3 -m venv /opt/docling-venv \
-  && /opt/docling-venv/bin/pip install --no-cache-dir -r ./python/docling_service/requirements.txt
+  && /opt/docling-venv/bin/pip install --upgrade pip setuptools wheel \
+  && /opt/docling-venv/bin/pip install -r ./python/docling_service/requirements.txt
 
 ENV PATH="/opt/docling-venv/bin:${PATH}"
 
