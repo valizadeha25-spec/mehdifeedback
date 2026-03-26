@@ -1,36 +1,112 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SubscriptionSync
 
-## Getting Started
+SubscriptionSync is a proof-of-concept web app that imports subscription data from Gmail receipts.
+It signs in with Google, scans a curated provider list, parses HTML bodies and PDF attachments,
+infers billing cadence across invoice history, and exports JSON aligned to the friend app’s form.
 
-First, run the development server:
+## App Stack
+
+- Next.js 16 App Router frontend and API routes
+- NextAuth Google OAuth with `gmail.readonly`
+- Gmail API message search and MIME normalization
+- Optional OpenAI extraction with a heuristic fallback when no API key is configured
+- Optional FastAPI + Docling sidecar for PDF parsing
+- Vitest coverage for query building, MIME parsing, inference, and fixture pipelines
+
+## Setup
+
+1. Copy `.env.example` to `.env.local`.
+2. Fill in `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `NEXTAUTH_SECRET`, and `NEXTAUTH_URL`.
+3. Add `OPENAI_API_KEY` if you want live structured extraction instead of the heuristic fallback.
+4. Start the Next.js app:
+
+```bash
+npm install
+npm run dev
+```
+
+## Optional Docling Sidecar
+
+The app can parse PDF attachments through a FastAPI sidecar:
+
+```bash
+cd python/docling_service
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn main:app --reload --port 8000
+```
+
+Point `PDF_PARSER_URL` at that service, for example `http://localhost:8000`.
+
+## Railway Deployment
+
+This repo is prepared to deploy to Railway with the included [Dockerfile](/Users/amir/Desktop/Mehdi/Dockerfile) and [railway.json](/Users/amir/Desktop/Mehdi/railway.json).
+
+### 1. Create the Railway service
+
+1. Push this repo to GitHub.
+2. In Railway, create a new project from the GitHub repo.
+3. Railway will build the app from the `Dockerfile`.
+
+### 2. Set Railway environment variables
+
+Add these variables in Railway:
+
+```bash
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+NEXTAUTH_SECRET=generate-a-long-random-secret
+NEXTAUTH_URL=https://your-app.up.railway.app
+OPENAI_API_KEY=your-openai-api-key
+OPENAI_MODEL=gpt-4.1-mini
+```
+
+Optional:
+
+```bash
+PDF_PARSER_URL=https://your-docling-service.up.railway.app
+```
+
+### 3. Configure Google OAuth
+
+In Google Cloud:
+
+1. Open your OAuth client.
+2. Add the Railway callback URL:
+
+```text
+https://your-app.up.railway.app/api/auth/callback/google
+```
+
+3. Add your Railway app domain to the authorized origins:
+
+```text
+https://your-app.up.railway.app
+```
+
+4. If the OAuth consent screen is still in testing mode, add your own Gmail and your friend’s Gmail as test users.
+
+### 4. Redeploy and test
+
+After setting the Railway variables and Google callback:
+
+1. Trigger a Railway redeploy.
+2. Open the deployed URL.
+3. Connect Gmail and run a scan.
+
+### Notes
+
+- `NEXTAUTH_URL` should be the final Railway HTTPS URL, not localhost.
+- The current app keeps results in memory only. A restart or redeploy clears prior scan results.
+- PDF parsing is optional. If you do not deploy the Docling sidecar, HTML/text receipts still work.
+- If you want Docling on Railway too, deploy `python/docling_service` as a separate Railway service and set `PDF_PARSER_URL` to that service URL.
+
+## Commands
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm run lint
+npm run test
+npm run build
 ```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.

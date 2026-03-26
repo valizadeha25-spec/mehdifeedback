@@ -1,0 +1,11 @@
+.git
+.next
+.tmp
+.env
+.env.local
+.env.*.local
+node_modules
+npm-debug.log*
+python/docling_service/.venv
+python/docling_service/__pycache__
+SubscriptionSync_PRD.docx
